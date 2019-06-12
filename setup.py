@@ -4,14 +4,14 @@ setup(
     version="0.1",
     # metadata to display on PyPI
     author="Michael Schroeder",
-    author_email="sommersoft@gmail.com",
+    author_email="sommersoft@github.com",
     description="CircuitPython Firmware Test Framework",
     license="MIT",
     keywords="circuitpython, rosiepi, rosie",
     url="https://github.com/sommersoft/RosiePi",   # project home page, if any
     project_urls={
         "Issues": "https://github.com/sommersoft/RosiePi/issues",
-        #"Documentation": "https://docs.example.com/HelloWorld/",
+        #"Documentation": "https://sommersoft/RosiePi/README.md",
         "Source Code": "https://github.com/sommersoft/RosiePi",
     },
 
@@ -23,14 +23,13 @@ setup(
         "pyserial",
         "sh",
         "pyusb",
-        "sh",
     ],
 
-    packages=find_packages(),#["rosiepi"],
+    packages=find_packages(),
 
-    #package_dir={"":"rosiepi"},
     package_data={
         "": [
+            "verifiers/*"
             "circuitpython/tests/*",
             "circuitpython/tests/circuitpython/*",
             ".fw_builds/*"
