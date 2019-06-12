@@ -23,6 +23,7 @@
 
 import argparse
 import datetime
+import inspect
 import os
 import pkg_resources
 import re
@@ -227,7 +228,7 @@ class TestController():
                         error = error[:-1]
                         if error:
                             raise BaseException(error)
-                        return output, error
+                        return output
                 else:
                     board.repl.read_until(bytes(command, encoding="utf8"))
                     #board.repl.read_until(b"\x08")
@@ -257,9 +258,7 @@ class TestController():
                             if action == "output":
                                 print("- Testing for output of '{}'".format(value))
                                 try:
-                                    result, error = exec_line(line)
-                                    #if len(error) != 0:
-                                    #    raise BaseException(error)
+                                    result = exec_line(line)
                                 except Exception as exc:
                                     raise pyboard.CPboardError(exc) from Exception
 
@@ -277,7 +276,28 @@ class TestController():
                                     raise pyboard.CPboardError(exc) from Exception
                             elif action == "verify":
                                 print("- Verifying with {}".format(value))
-                                pass
+                                try:
+                                    # import the referenced module
+                                    module_name, func_name = value.split(".")
+                                    imprt_stmt = [".verifiers.", module_name]
+                                    verifier = importlib.import_module(
+                                        "".join(imprt_stmt),
+                                        package="rosiepi.rosie"
+                                    )
+                                    print(dir(verifier))
+                                    # now get the function object using inspect
+                                    # so that we can dynamically run it.
+                                    ver_func = [
+                                        func[1] for func in
+                                        inspect.getmembers(verifier)
+                                        if func[0].startswith(func_name)
+                                    ][0]
+                                    print(ver_func)
+
+                                    ver_func()
+                                    exec_line(line)
+                                except Exception as exc:
+                                    raise pyboard.CPboardError(exc) from Exception
                                 print(" - Result: todo")
                         else:
                             board.repl.execute(line)
