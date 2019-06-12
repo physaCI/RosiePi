@@ -1,5 +1,5 @@
 # RosiePi specific ignores
-.fw_builds/*
+/rosiepi/.fw_builds/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
