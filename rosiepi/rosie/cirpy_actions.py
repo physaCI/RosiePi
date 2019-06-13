@@ -43,7 +43,8 @@ def check_local_clone():
     if ".git" not in check_dir:
         working_dir = os.getcwd()
         os.chdir(cirpy_dir())
-        git.clone("https://github.com/adafruit/circuitpython.git")
+        git.clone("https://github.com/adafruit/circuitpython.git",
+                  "--depth", "1")
         os.chdir(working_dir)
 
 
@@ -82,13 +83,13 @@ def build_fw(board, build_ref):
     os.chdir(cirpy_dir())
     try:
         print("Fetching {}...".format(build_ref))
-        git.fetch("origin", build_ref)
+        git.fetch("--depth", "1", "origin", build_ref)
 
         print("Checking out {}...".format(build_ref))
         git.checkout(build_ref)
 
         print("Updating submodules...")
-        git.submodule("update", "--init", "--recursive")
+        git.submodule("update", "--init", "--recursive", "--depth", "1")
     except sh.ErrorReturnCode as git_err:
         # TODO: change to 'master'
         git.checkout("-f", "core_fold")
