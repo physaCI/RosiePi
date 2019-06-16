@@ -101,7 +101,7 @@ def parse_test_interactions(test_file):
                         "line {0} in '{1}'".format(line_no, test_file)
                     ]
                     raise SyntaxWarning(" ".join(exc_msg))
-    print(interactions)
+    #print(interactions)
     return interactions
 
 
@@ -118,6 +118,29 @@ class TestObject():
         self.test_dir = path_split[0]
         self.test_file = path_split[1]
         self.interactions = parse_test_interactions(test_file)
+        self.repl_session = ""
+
+def exec_line(board, command, input=False, echo=True):
+    if not isinstance(board, pyboard.CPboard):
+        raise ValueError("'board' argument must be of 'pyboard.CPBoard' type.")
+    tail_char = b"\x04"
+    if input:
+        tail_char = b"\r\n"
+    board.repl.write(command)
+    board.repl.write(tail_char)
+    if not input:
+        board.repl.read_until(b"OK")
+        if echo:
+            output = board.repl.read_until(b"\x04")
+            output = output[:-1]
+
+            error = board.repl.read_until(b"\x04")
+            error = error[:-1]
+            if error:
+                raise BaseException(error)
+            return output
+    else:
+        board.repl.read_until(bytes(command, encoding="utf8"))
 
 class TestController():
     """ Main class to handle testing operations.
@@ -211,31 +234,7 @@ class TestController():
         tests_failed = 0
         this_test_passed = True
         with self.board as board:
-
-            def exec_line(command, input=False, echo=True):
-                tail_char = b"\x04"
-                if input:
-                    tail_char = b"\r\n"
-                board.repl.write(command)
-                board.repl.write(tail_char)
-                if not input:
-                    board.repl.read_until(b"OK")
-                    if echo:
-                        output = board.repl.read_until(b"\x04")
-                        output = output[:-1]
-
-                        error = board.repl.read_until(b"\x04")
-                        error = error[:-1]
-                        if error:
-                            raise BaseException(error)
-                        return output
-                else:
-                    board.repl.read_until(bytes(command, encoding="utf8"))
-                    #board.repl.read_until(b"\x08")
-                    #board.repl.write("\r\n")
-
-
-            board.repl.session = b''
+            board.repl.session = b""
             for test in self.tests:
                 # we likely had a REPL reset, so make sure we're
                 # past the "press any key" prompt.
@@ -254,11 +253,11 @@ class TestController():
                         if line_no in test.interactions:
                             action = test.interactions[line_no]["action"]
                             value = test.interactions[line_no]["value"]
-                            print("ACTION: {}; VALUE: {}".format(action, value))
+                            #print("ACTION: {}; VALUE: {}".format(action, value))
                             if action == "output":
-                                print("- Testing for output of '{}'".format(value))
+                                print("- Testing for output of: {}".format(value))
                                 try:
-                                    result = exec_line(line)
+                                    result = exec_line(board, line)
                                 except Exception as exc:
                                     raise pyboard.CPboardError(exc) from Exception
 
@@ -266,16 +265,16 @@ class TestController():
                                              encoding="utf-8").rstrip("\r\n")
                                 if result != value:
                                     this_test_passed = False
-                                print(" - Result: '{}'".format(result))
+                                print(" - Passed!")
                             elif action == "input":
-                                print("- Testing for input of '{}'".format(value))
+                                print("- Sending input: {}".format(value))
                                 try:
-                                    exec_line(line, echo=False)
-                                    exec_line(value, input=True)
+                                    exec_line(board, line, echo=False)
+                                    exec_line(board, value, input=True)
                                 except Exception as exc:
                                     raise pyboard.CPboardError(exc) from Exception
                             elif action == "verify":
-                                print("- Verifying with {}".format(value))
+                                print("- Verifying with: {}".format(value))
                                 try:
                                     # import the referenced module
                                     module_name, func_name = value.split(".")
@@ -284,21 +283,23 @@ class TestController():
                                         "".join(imprt_stmt),
                                         package="rosiepi.rosie"
                                     )
-                                    print(dir(verifier))
                                     # now get the function object using inspect
                                     # so that we can dynamically run it.
                                     ver_func = [
                                         func[1] for func in
                                         inspect.getmembers(verifier)
-                                        if func[0].startswith(func_name)
+                                        if func[0] == func_name
                                     ][0]
-                                    print(ver_func)
-
-                                    ver_func()
-                                    exec_line(line)
+                                    #print(ver_func)
+                                    exec_line(board, line)
+                                    result = ver_func(board)
+                                    if not result:
+                                        raise pyboard.CPboardError(
+                                            "'{}' test failed.".format(value)
+                                        )
                                 except Exception as exc:
                                     raise pyboard.CPboardError(exc) from Exception
-                                print(" - Result: todo")
+                                print(" - Passed!")
                         else:
                             board.repl.execute(line)
                     except pyboard.CPboardError as line_err:
@@ -322,6 +323,7 @@ class TestController():
                 else:
                     tests_failed += 1
                 tests_run += 1
+                test.repl_session = board.repl.session
                 print(board.repl.session)
                 print("-"*60)
                 board.repl.reset()
