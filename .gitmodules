@@ -1,3 +1,0 @@
-[submodule "rosiepi/circuitpython"]
-	path = rosiepi/circuitpython
-	url = https://github.com/adafruit/circuitpython.git

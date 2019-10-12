@@ -31,9 +31,6 @@ setup(
     package_data={
         "": [
             "verifiers/*"
-            "circuitpython/tests/*",
-            "circuitpython/tests/circuitpython/*",
-            ".fw_builds/*"
         ]
     },
 
