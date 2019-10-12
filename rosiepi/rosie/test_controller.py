@@ -285,7 +285,7 @@ class TestController():
             for test in self.tests:
                 # we likely had a REPL reset, so make sure we're
                 # past the "press any key" prompt.
-                board.repl.execute(b"\x01", async=True)
+                board.repl.execute(b"\x01", wait_for_response=True)
                 this_test_passed = True
                 self.log.write("Starting test: {}".format(test.test_file))
                 test_file_path = os.path.join(test.test_dir, test.test_file)
