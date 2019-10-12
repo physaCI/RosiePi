@@ -32,6 +32,7 @@ import time
 _AVAILABLE_PORTS = ["atmel-samd", "nrf"]
 
 def cirpy_dir():
+    return find_circuitpython()
     # need new finder. pathlib.Path.home might be a good start, but need to
     # verify user interaction with systemd services (RosiePiApp).
 
