@@ -48,12 +48,13 @@ def check_local_clone():
         os.chdir(working_dir)
 
 
-def build_fw(board, build_ref):
+def build_fw(board, build_ref, test_log):
     """ Builds the firware at `build_ref` for `board`. Firmware will be
         output to `.fw_builds/<build_ref>/<board>/`.
 
     :param: str board: Name of the board to build firmware for.
     :param: str build_ref: The tag/commit to build firmware for.
+    :param: test_log: The TestController.log used for output.
     """
     working_dir = os.getcwd()
     cirpy_ports_dir = os.path.join(cirpy_dir(), "ports")
@@ -67,8 +68,8 @@ def build_fw(board, build_ref):
     if board_port_dir == None:
         err_msg = [
             "'{}' board not available to test. Can't build firmware.".format(board),
-            "="*60,
-            "Closing RosiePi"
+            #"="*60,
+            #"Closing RosiePi"
         ]
         raise RuntimeError("\n".join(err_msg))
 
@@ -82,13 +83,13 @@ def build_fw(board, build_ref):
 
     os.chdir(cirpy_dir())
     try:
-        print("Fetching {}...".format(build_ref))
+        test_log.write("Fetching {}...".format(build_ref))
         git.fetch("--depth", "1", "origin", build_ref)
 
-        print("Checking out {}...".format(build_ref))
+        test_log.write("Checking out {}...".format(build_ref))
         git.checkout(build_ref)
 
-        print("Updating submodules...")
+        test_log.write("Updating submodules...")
         git.submodule("update", "--init", "--recursive", "--depth", "1")
     except sh.ErrorReturnCode as git_err:
         # TODO: change to 'master'
@@ -97,8 +98,8 @@ def build_fw(board, build_ref):
         err_msg = [
             "Building firmware failed:",
             " - {}".format(str(git_err.stderr, encoding="utf-8").strip("\n")),
-            "="*60,
-            "Closing RosiePi"
+            #"="*60,
+            #"Closing RosiePi"
         ]
         raise RuntimeError("\n".join(err_msg)) from None
 
@@ -110,7 +111,7 @@ def build_fw(board, build_ref):
                                                      dir=build_dir)
     )
 
-    print("Building firmware...")
+    test_log.write("Building firmware...")
     try:
         subprocess.run(board_cmd[0], shell=True, stdout=subprocess.DEVNULL,
                        stderr=subprocess.STDOUT)
@@ -118,7 +119,7 @@ def build_fw(board, build_ref):
                                   stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         result = str(fw_build.stdout, encoding="utf-8").split("\n")
         success_msg = [line for line in result if "bytes" in line]
-        print(" - " + "\n - ".join(success_msg))
+        test_log.write(" - " + "\n - ".join(success_msg))
     except subprocess.CalledProcessError as cmd_err:
         # TODO: change to 'master'
         git.checkout("-f", "core_fold")
@@ -126,8 +127,8 @@ def build_fw(board, build_ref):
         err_msg = [
             "Building firmware failed:",
             " - {}".format(str(cmd_err.stdout, encoding="utf-8").strip("\n")),
-            "="*60,
-            "Closing RosiePi"
+            #"="*60,
+            #"Closing RosiePi"
         ]
         raise RuntimeError("\n".join(err_msg)) from None
 
@@ -137,35 +138,36 @@ def build_fw(board, build_ref):
     os.chdir(working_dir)
     return build_dir
 
-def update_fw(board, fw_path):
+def update_fw(board, fw_path, test_log):
     """ Resets `board` into bootloader mode, and copies over
         new firmware located at `fw_path`.
 
     :param: board: The cpboard.py::CPboard object to act upon
     :param: fw_path: File path to the firmware UF2 to copy.
+    :param: test_log: The TestController.log used for output.
     """
     success_msg = ["Firmware upload successful!"]
     try:
         with board:
             if not board.bootloader:
-                print("Resetting into bootloader mode...")
+                test_log.write("Resetting into bootloader mode...")
                 board.reset_to_bootloader(repl=True)
                 time.sleep(10)
-            print("In bootloader mode. Current bootloader: {}".format(board.firmware.info["header"]))
+            test_log.write("In bootloader mode. Current bootloader: {}".format(board.firmware.info["header"]))
 
-            print("Uploading firmware...")
+            test_log.write("Uploading firmware...")
             board.firmware.upload(fw_path)
-            print("Waiting for board to reload...")
+            test_log.write("Waiting for board to reload...")
             time.sleep(10)
         with board:
             pass
             #success_msg.append(" - New firmware: {}".format(board.firmware.info))
-        print("\n".join(success_msg))
+        test_log.write("\n".join(success_msg))
     except BaseException as brd_err:
         err_msg = [
             "Updating firmware failed:",
             " - {}".format(brd_err.args),
-            "="*60,
-            "Closing RosiePi"
+            #"="*60,
+            #"Closing RosiePi"
         ]
         raise BaseException("\n".join(err_msg)) from None

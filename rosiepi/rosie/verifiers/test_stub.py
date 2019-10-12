@@ -12,7 +12,7 @@ def foo(board):
     result_list = result.strip("\r\n[]").split(", ")
     #print(result_list)
     d_pins = [pin.strip("'") for pin in result_list if pin.startswith("'D")]
-    print("D pins:", d_pins)
+    #print("D pins:", d_pins)
 
     cmd = "import digitalio"
     tc.exec_line(board, cmd, echo=False)
@@ -22,7 +22,7 @@ def foo(board):
         cmd = "{} = digitalio.DigitalInOut(board.{})".format(var_name, pin_no)
         tc.exec_line(board, cmd, echo=False)
         pin_dir = tc.exec_line(board, "print({}.direction)".format(var_name))
-        print("pin: {} - direction: {}".format(pin_no, pin_dir))
+        #print("pin: {} - direction: {}".format(pin_no, pin_dir))
         # should be 'digitalio.Direction.INPUT'
         match = "digitalio.Direction.INPUT"
         if str(pin_dir, encoding="utf8").rstrip("\r\n") != match:

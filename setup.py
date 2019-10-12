@@ -25,6 +25,7 @@ setup(
         "pyusb",
     ],
 
+    #package_dir={"rosiepi":"rosie"},
     packages=find_packages(),
 
     package_data={
