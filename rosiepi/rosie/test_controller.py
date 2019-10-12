@@ -30,9 +30,11 @@ import pkg_resources
 import re
 import sys
 
-import importlib
-pyboard = importlib.import_module(".circuitpython.tests.pyboard",
-                                  package="rosiepi")
+#import importlib
+#pyboard = importlib.import_module(".circuitpython.tests.pyboard",
+#                                  package="rosiepi")
+
+from tests import pyboard
 
 from . import cirpy_actions
 
@@ -414,7 +416,7 @@ def main():
     if tc.state != "error":
         tc.start_test()
 
-    #print(tc.result())
-    #print()
-    #print("tc's stream log:")
-    #print(tc.log.getvalue())
+    print(tc.result)
+    print()
+    print("tc's stream log:")
+    print(tc.log.getvalue())
