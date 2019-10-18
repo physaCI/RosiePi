@@ -36,6 +36,7 @@ import sys
 
 from tests import pyboard
 
+from rosiepi.rosie import find_circuitpython
 from . import cirpy_actions
 
 cli_parser = argparse.ArgumentParser(description="rosiepi Test Controller")

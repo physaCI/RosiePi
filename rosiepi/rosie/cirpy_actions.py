@@ -29,6 +29,8 @@ import subprocess
 import sys
 import time
 
+from rosiepi.rosie import find_circuitpython
+
 _AVAILABLE_PORTS = ["atmel-samd", "nrf"]
 
 def cirpy_dir():
