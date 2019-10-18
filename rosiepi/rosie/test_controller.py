@@ -52,7 +52,7 @@ cli_parser.add_argument(
 
 
 def cp_tests_dir():
-    return pkg_resources.resource_filename("rosiepi", "circuitpython/tests")
+    return os.path.join(find_circuitpython(), "tests")
 
 
 def parse_test_interactions(test_file):
