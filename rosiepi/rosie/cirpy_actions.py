@@ -97,7 +97,7 @@ def build_fw(board, build_ref, test_log):
         git.submodule("update", "--init", "--recursive", "--depth", "1")
     except sh.ErrorReturnCode as git_err:
         # TODO: change to 'master'
-        git.checkout("-f", "core_fold")
+        git.checkout("-f", "rosiepi_test")
         os.chdir(working_dir)
         err_msg = [
             "Building firmware failed:",
@@ -126,7 +126,7 @@ def build_fw(board, build_ref, test_log):
         test_log.write(" - " + "\n - ".join(success_msg))
     except subprocess.CalledProcessError as cmd_err:
         # TODO: change to 'master'
-        git.checkout("-f", "core_fold")
+        git.checkout("-f", "rosiepi_test")
         os.chdir(working_dir)
         err_msg = [
             "Building firmware failed:",
@@ -138,7 +138,7 @@ def build_fw(board, build_ref, test_log):
 
 
     # TODO: change to 'master'
-    git.checkout("-f", "core_fold")
+    git.checkout("-f", "rosiepi_test")
     os.chdir(working_dir)
     return build_dir
 
