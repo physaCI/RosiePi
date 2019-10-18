@@ -417,7 +417,7 @@ def main():
     if tc.state != "error":
         tc.start_test()
 
-    print(tc.result)
-    print()
-    print("tc's stream log:")
+    #print(tc.result)
+    #print()
+    #print("tc's stream log:")
     print(tc.log.getvalue())
