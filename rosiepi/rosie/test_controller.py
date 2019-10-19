@@ -30,7 +30,7 @@ import pkg_resources
 import re
 import sys
 
-#import importlib
+import importlib
 #pyboard = importlib.import_module(".circuitpython.tests.pyboard",
 #                                  package="rosiepi")
 
