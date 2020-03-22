@@ -102,7 +102,7 @@ def parse_test_interactions(test_file):
                 if line.startswith("#$"):
                     exc_msg = [
                         "Improper interaction syntax on",
-                        "line {0} in '{1}'".format(line_no, test_file)
+                        f"line {line_no} in '{test_file}'",
                     ]
                     raise SyntaxWarning(" ".join(exc_msg))
     #print(interactions)
@@ -140,7 +140,7 @@ class TestObject():
 
     def __init__(self, test_file):
         if not os.path.exists(test_file):
-            raise FileNotFoundError("'{}' was not found.".format(test_file))
+            raise FileNotFoundError(f"'{test_file}' was not found.")
         path_split = os.path.split(test_file)
         self.test_dir = path_split[0]
         self.test_file = path_split[1]
@@ -154,8 +154,8 @@ class TestResultStream(StringIO):
         both the stdout (print) and retaining the stream for
         logging and database usage.
     """
-    def __init__(self):
-        super().__init__()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
     def write(self, data, quiet=True):
         """ Override StringIO's write command so that we can also
@@ -182,7 +182,6 @@ class TestController():
     def __init__(self, board, build_ref):
         self.state = "init"
         self.run_date = datetime.datetime.now().strftime("%d-%b-%Y,%H:%M:%S%Z")
-        self.log = TestResultStream()
         self.build_ref = build_ref
         self.board_name = board
         self.tests_run = 0
@@ -190,29 +189,29 @@ class TestController():
             "="*25 + " RosiePi " + "="*26,
             "Initiating rosiepi...",
             "-"*60,
-            " - Date/Time: {}".format(self.run_date),
-            " - Test commit: {}".format(build_ref),
-            " - Test board: {}".format(board),
+            f" - Date/Time: {self.run_date}",
+            f" - Test commit: {build_ref}",
+            f" - Test board: {board}",
             "="*60,
-            "Connecting to: {}".format(board),
+            f"Connecting to: {board}",
             "-"*60
         ]
-        self.log.write("\n".join(init_msg))
+        self.log = TestResultStream(initial_value="\n".join(init_msg))
 
         try:
             self.board = pyboard.CPboard.from_try_all(board)
             init_msg = [
                 "Connected!",
                 "Board info:",
-                " - Serial Number: {}".format(self.board.serial_number),
-                " - Disk Drive: {}".format(self.board.disk.path),
+                f" - Serial Number: {self.board.serial_number}",
+                f" - Disk Drive: {self.board.disk.path}",
                 "="*60,
             ]
             self.log.write("\n".join(init_msg))
             self.state = "board_connected"
         except RuntimeError as conn_err:
             err_msg = [
-                "Failed to connect to: {}".format(self.board_name),
+                f"Failed to connect to: {self.board_name}",
                 conn_err.args[0],
                 "="*60,
                 "Closing RosiePi"
@@ -228,7 +227,7 @@ class TestController():
             self.fw_build_dir = cirpy_actions.build_fw(self.board_name, self.build_ref, self.log)
             self.log.write("="*60)
 
-            self.log.write("Updating Firmware on: {}".format(self.board_name))
+            self.log.write(f"Updating Firmware on: {self.board_name}")
             cirpy_actions.update_fw(
                 self.board,
                 os.path.join(self.fw_build_dir, "firmware.uf2"),
@@ -237,7 +236,7 @@ class TestController():
             self.log.write("="*60)
         except RuntimeError as fw_err:
             err_msg = [
-                "Failed update firmware on: {}".format(self.board_name),
+                f"Failed update firmware on: {self.board_name}",
                 fw_err.args[0],
                 "="*60,
                 "Closing RosiePi"
@@ -283,30 +282,43 @@ class TestController():
         """
         total_tests = len(self.tests)
         this_test_passed = True
+
         with self.board as board:
             board.repl.session = b""
+
             for test in self.tests:
                 # we likely had a REPL reset, so make sure we're
                 # past the "press any key" prompt.
                 board.repl.execute(b"\x01", wait_for_response=True)
+
                 this_test_passed = True
-                self.log.write("Starting test: {}".format(test.test_file))
+
+                self.log.write(f"Starting test: {test.test_file}")
+
                 test_file_path = os.path.join(test.test_dir, test.test_file)
                 test_cmds = []
+
                 with open(test_file_path, 'r') as current_test:
                     test_cmds = current_test.readlines()
+
                 for line_no, line in enumerate(test_cmds, start=1):
                     if line == "\n":
                         continue
-                    self.log.write("running line: ({}) {}".format(line_no,
-                                                         line.rstrip("\n")))
+
+                    self.log.write(
+                        f"running line: ({line_no}) {line.rstrip("\n")}"
+                    )
+
                     try:
                         if line_no in test.interactions:
                             action = test.interactions[line_no]["action"]
                             value = test.interactions[line_no]["value"]
-                            #print("ACTION: {}; VALUE: {}".format(action, value))
+                            #print(f"ACTION: {action}; VALUE: {value}")
                             if action == "output":
-                                self.log.write("- Testing for output of: {}".format(value))
+                                self.log.write(
+                                    f"- Testing for output of: {value}"
+                                )
+
                                 try:
                                     result = exec_line(board, line)
                                 except Exception as exc:
@@ -316,16 +328,21 @@ class TestController():
                                              encoding="utf-8").rstrip("\r\n")
                                 if result != value:
                                     this_test_passed = False
+
                                 self.log.write(" - Passed!")
+
                             elif action == "input":
-                                self.log.write("- Sending input: {}".format(value))
+                                self.log.write(f"- Sending input: {value}")
+
                                 try:
                                     exec_line(board, line, echo=False)
                                     exec_line(board, value, input=True)
                                 except Exception as exc:
                                     raise pyboard.CPboardError(exc) from Exception
+
                             elif action == "verify":
-                                self.log.write("- Verifying with: {}".format(value))
+                                self.log.write(f"- Verifying with: {value}")
+
                                 try:
                                     # import the referenced module
                                     module_name, func_name = value.split(".")
@@ -334,6 +351,7 @@ class TestController():
                                         "".join(imprt_stmt),
                                         package="rosiepi.rosie"
                                     )
+
                                     # now get the function object using inspect
                                     # so that we can dynamically run it.
                                     ver_func = [
@@ -342,25 +360,29 @@ class TestController():
                                         if func[0] == func_name
                                     ][0]
                                     #self.log.write(ver_func)
+
                                     exec_line(board, line)
                                     result = ver_func(board)
                                     if not result:
                                         raise pyboard.CPboardError(
-                                            "'{}' test failed.".format(value)
+                                            f"'{value}' test failed."
                                         )
                                 except Exception as exc:
                                     raise pyboard.CPboardError(exc) from Exception
+
                                 self.log.write(" - Passed!")
+
                         else:
                             board.repl.execute(line)
+
                     except pyboard.CPboardError as line_err:
                         this_test_passed = False
                         err_args = [str(arg) for arg in line_err.args]
                         err_msg = [
                             "Test Failed!",
-                            " - Last code executed: '{}'".format(line.strip("\n")),
-                            " - Line: {}".format(line_no),
-                            " - Exception: {}".format("".join(err_args)),
+                            f" - Last code executed: '{line.strip("\n")}'",
+                            f" - Line: {line_no}",
+                            f" - Exception: {''.join(err_args)}",
                         ]
                         self.log.write("\n".join(err_msg))
                         break
@@ -385,10 +407,9 @@ class TestController():
                 tests_failed += 1
 
         end_msg = [
-            "Ran {run} of {total} tests.".format(run=self.tests_run,
-                                                 total=total_tests),
-            "Passed: {}".format(tests_passed),
-            "Failed: {}".format(tests_failed)
+            f"Ran {self.tests_run} of {total_tests} tests.",
+            f"Passed: {tests_passed}",
+            f"Failed: {tests_failed}",
         ]
         self.log.write("\n".join(end_msg))
 
