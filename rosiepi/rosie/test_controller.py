@@ -1,25 +1,25 @@
- # The MIT License (MIT)
- #
- # Copyright (c) 2019 Michael Schroeder
- #
- # Permission is hereby granted, free of charge, to any person obtaining a copy
- # of this software and associated documentation files (the "Software"), to deal
- # in the Software without restriction, including without limitation the rights
- # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- # copies of the Software, and to permit persons to whom the Software is
- # furnished to do so, subject to the following conditions:
- #
- # The above copyright notice and this permission notice shall be included in
- # all copies or substantial portions of the Software.
- #
- # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- # AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- # THE SOFTWARE.
- #
+# The MIT License (MIT)
+#
+# Copyright (c) 2019 Michael Schroeder
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+#
 
 import argparse
 import datetime
@@ -185,6 +185,8 @@ class TestController():
         self.build_ref = build_ref
         self.board_name = board
         self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
         init_msg = [
             "="*25 + " RosiePi " + "="*26,
             "Initiating rosiepi...",
@@ -397,19 +399,18 @@ class TestController():
                 self.log.write("-"*60)
                 board.repl.reset()
 
-        tests_passed, tests_failed = 0, 0
         for test in self.tests:
             if test.test_result == None:
                 continue
             elif test.test_result == True:
-                tests_passed += 1
+                self.tests_passed += 1
             elif test.test_result == False:
-                tests_failed += 1
+                self.tests_failed += 1
 
         end_msg = [
             f"Ran {self.tests_run} of {total_tests} tests.",
-            f"Passed: {tests_passed}",
-            f"Failed: {tests_failed}",
+            f"Passed: {self.tests_passed}",
+            f"Failed: {self.tests_failed}",
         ]
         self.log.write("\n".join(end_msg))
 
