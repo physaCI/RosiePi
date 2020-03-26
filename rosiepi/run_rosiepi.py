@@ -28,6 +28,7 @@ import pathlib
 import requests
 
 from configparser import ConfigParser
+from socket import gethostname
 
 from rosie import find_circuitpython, test_controller
 
@@ -98,14 +99,16 @@ def markdownify_results(results):
     """
 
     mdown = [
-        "| Board | Result |",
-        "| --- | --- |"
+        "| Board | Result | Tests Passed | Tests Failed",
+        "| :---: | :---: | :---: | :---: |"
     ]
 
     for board in results:
         board_mdown = [
             board["name"],
-            board["outcome"]
+            board["outcome"],
+            board["tests_passed"],
+            board["tests_failed"],
         ]
         mdown.append(board_mdown)
 
@@ -141,7 +144,9 @@ def run_rosie(commit, boards):
         board_results = {
             "board_name": board,
             "outcome": None,
-            "rosie_log": [],
+            "tests_passed": 0,
+            "tests_failed": 0,
+            "rosie_log": "",
         }
         rosie_test = test_controller.TestController(board, commit)
 
@@ -165,6 +170,8 @@ def run_rosie(commit, boards):
                 board_results["outcome"] = "Error"
             app_conclusion = "failure"
 
+        board_results["tests_passed"] = rosie_test.tests_passed
+        board_results["tests_failed"] = rosie_test.tests_failed
         board_results["rosie_log"] = rosie_test.log.getvalue()
         board_tests.append(board_results)
 
@@ -199,6 +206,8 @@ def send_results(check_run_id, physaci_config, results_payload):
     phsyci_url = physaci_config.physaci_url + "/testnode-hook/testresult/update"
     header = {"x-functions-key": physaci_config.physaci_api_key}
     payload = json.loads(results_payload)
+    payload["node_name"] = gethostname()
+    payload["check_run_id"] = check_run_id
 
     response = request.post(physaci_url, headers=header, json=payload)
     if not response.ok:
