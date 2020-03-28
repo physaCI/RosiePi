@@ -30,6 +30,7 @@ import requests
 from configparser import ConfigParser
 from socket import gethostname
 
+from logger import rosiepi_logger
 from rosie import find_circuitpython, test_controller
 
 cli_parser = argparse.ArgumentParser(description="RosieApp")
@@ -140,6 +141,9 @@ def run_rosie(commit, boards):
     }
 
     board_tests = []
+
+    rosiepi_logger.info("Starting tests...")
+
     for board in boards:
         board_results = {
             "board_name": board,
@@ -193,6 +197,8 @@ def run_rosie(commit, boards):
     json_payload = json.dumps(payload)
     print(json_payload)
 
+    rosiepi_logger.info("Tests completed...")
+
     return json_payload
 
 def send_results(check_run_id, physaci_config, results_payload):
@@ -203,6 +209,8 @@ def send_results(check_run_id, physaci_config, results_payload):
         :param: results_payload: A JSON string with the test results.
     """
 
+    rosiepi_logger.info("Sending test results to physaCI.")
+
     phsyci_url = physaci_config.physaci_url + "/testresult/update"
     header = {"x-functions-key": physaci_config.physaci_api_key}
     payload = json.loads(results_payload)
@@ -211,13 +219,19 @@ def send_results(check_run_id, physaci_config, results_payload):
 
     response = request.post(physaci_url, headers=header, json=payload)
     if not response.ok:
+        rosiepi_logger.warning("Failed to send results to physaCI")
         raise RuntimeError(
             f"RosiePi failed to send results. Results payload: {results_payload}"
         )
 
+    rosiepi_logger.info("Test results sent successfully.")
 
 def main():
     cli_arg = cli_parser.parse_args()
+
+    rosiepi_logger.info("Initiating RosiePi test(s).")
+    rosiepi_logger.info(f"Testing commit: {cli_arg.commit}")
+    rosiepi_logger.info(f"Check run id: {cli_arg.check_run_id}")
 
     config = PhysaCIConfig()
 
