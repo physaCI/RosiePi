@@ -38,7 +38,7 @@ setup(
     entry_points={
         "console_scripts": [
             "rosiepi = rosiepi.rosie.test_controller:main",
-            "run_rosie = rosiepi.run_rosie:main"
+            "run_rosie = rosiepi.run_rosiepi:main"
         ]
     }
 )
