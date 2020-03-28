@@ -203,7 +203,7 @@ def send_results(check_run_id, physaci_config, results_payload):
         :param: results_payload: A JSON string with the test results.
     """
 
-    phsyci_url = physaci_config.physaci_url + "/testnode-hook/testresult/update"
+    phsyci_url = physaci_config.physaci_url + "/testresult/update"
     header = {"x-functions-key": physaci_config.physaci_api_key}
     payload = json.loads(results_payload)
     payload["node_name"] = gethostname()
