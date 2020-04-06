@@ -26,6 +26,7 @@ import logging.config
 
 LOGGING_CONF = {
     "version": 1,
+    "disable_existing_loggers": False,
     "formatters": {
         "basic": {
             "format": "%(name)s: %(funcName)s: %(message)s",
@@ -44,6 +45,7 @@ LOGGING_CONF = {
         "rosiepi": {
             "handlers": ["rosiepi_handler"],
             "propagate": True,
+            "level": "INFO"
         },
     },
 }
