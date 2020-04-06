@@ -308,7 +308,7 @@ class TestController():
                         continue
 
                     self.log.write(
-                        f"running line: ({line_no}) {line.rstrip("\n")}"
+                        f"running line: ({line_no}) {line.rstrip('\n')}"
                     )
 
                     try:
@@ -382,7 +382,7 @@ class TestController():
                         err_args = [str(arg) for arg in line_err.args]
                         err_msg = [
                             "Test Failed!",
-                            f" - Last code executed: '{line.strip("\n")}'",
+                            f" - Last code executed: '{line.strip('\n')}'",
                             f" - Line: {line_no}",
                             f" - Exception: {''.join(err_args)}",
                         ]
