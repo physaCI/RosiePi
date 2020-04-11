@@ -46,11 +46,11 @@ cli_parser.add_argument(
 
 GIT_URL_COMMIT = "https://github.com/adafruit/circuitpython/commit/"
 
+_STATIC_CONFIG_FILE = pathlib.Path("/etc/opt/physaci_sub/conf.ini")
 
 class PhysaCIConfig():
     """ Container class for holding local configuration results.
     """
-    _STATIC_CONFIG_FILE = pathlib.Path("/etc/opt/physaci_sub/conf.ini")
 
     def __init__(self):
         self.config = ConfigParser(allow_no_value=True, default_section="local")
