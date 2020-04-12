@@ -112,7 +112,7 @@ def markdownify_results(results):
 
     for board in results:
         board_mdown = [
-            board["name"],
+            board["board_name"],
             board["outcome"],
             board["tests_passed"],
             board["tests_failed"],
@@ -226,13 +226,13 @@ def send_results(check_run_id, physaci_config, results_payload):
 
     rosiepi_logger.info("Sending test results to physaCI.")
 
-    phsyci_url = physaci_config.physaci_url + "/testresult/update"
+    phsyaci_url = physaci_config.physaci_url + "/testresult/update"
     header = {"x-functions-key": physaci_config.physaci_api_key}
     payload = json.loads(results_payload)
     payload["node_name"] = gethostname()
     payload["check_run_id"] = check_run_id
 
-    response = request.post(physaci_url, headers=header, json=payload)
+    response = requests.post(physaci_url, headers=header, json=payload)
     if not response.ok:
         rosiepi_logger.warning("Failed to send results to physaCI")
         raise RuntimeError(
