@@ -49,7 +49,8 @@ cli_parser.add_argument(
 )
 
 
-GIT_URL_COMMIT = "https://github.com/adafruit/circuitpython/commit/"
+# TODO: update to adafruit github
+GIT_URL_COMMIT = "https://github.com/sommersoft/circuitpython/commit/"
 
 _STATIC_CONFIG_FILE = pathlib.Path("/etc/opt/physaci_sub/conf.ini")
 
@@ -139,9 +140,18 @@ def run_rosie(commit, boards):
         "rosie_version": "0.1", #rosiepi_version,
     }
 
+    app_output_summary = [
+        "Ran tests on: ",
+        f"[{summary_params['commit_title']}]",
+        f"({summary_params['commit_url']})",
+        "\n\n",
+        "RosiePi job ran on node: ",
+        f"{gethostname()}",
+    ]
+
     app_output = {
         "title": "RosiePi",
-        "summary": app_output_summary,
+        "summary": "".join(app_output_summary),
         "text": "",
     }
 
