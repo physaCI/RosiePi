@@ -21,10 +21,15 @@
 # THE SOFTWARE.
 #
 
+import pathlib
+
+activate_this = f'{path.Path().home()}/rosie_pi/rosie_venv/bin/activate_this.py'
+with open(activate_this) as file_:
+    exec(file_.read(), dict(__file__=activate_this))
+
 import argparse
 import datetime
 import json
-import pathlib
 import requests
 
 from configparser import ConfigParser
