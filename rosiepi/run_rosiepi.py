@@ -228,7 +228,7 @@ def send_results(check_run_id, physaci_config, results_payload):
 
     rosiepi_logger.info("Sending test results to physaCI.")
 
-    phsyaci_url = physaci_config.physaci_url + "/testresult/update"
+    physaci_url = physaci_config.physaci_url + "/testresult/update"
     header = {"x-functions-key": physaci_config.physaci_api_key}
     payload = json.loads(results_payload)
     payload["node_name"] = gethostname()
