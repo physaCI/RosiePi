@@ -112,12 +112,14 @@ def markdownify_results(results):
 
     for board in results:
         board_mdown = [
+            "",
             board["board_name"],
             board["outcome"],
             board["tests_passed"],
             board["tests_failed"],
+            ""
         ]
-        mdown.append(board_mdown)
+        mdown.append("|".join(board_mdown))
 
     return "\n".join(mdown)
 
@@ -189,8 +191,8 @@ def run_rosie(commit, boards):
                 board_results["outcome"] = "Error"
             app_conclusion = "failure"
 
-        board_results["tests_passed"] = rosie_test.tests_passed
-        board_results["tests_failed"] = rosie_test.tests_failed
+        board_results["tests_passed"] = str(rosie_test.tests_passed)
+        board_results["tests_failed"] = str(rosie_test.tests_failed)
         board_results["rosie_log"] = rosie_test.log.getvalue()
         board_tests.append(board_results)
 
