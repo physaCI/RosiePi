@@ -81,7 +81,9 @@ class PhysaCIConfig():
 
     @property
     def supported_boards(self):
-        return self.config.get("rosie_pi", "boards")
+        boards = self.config.get("rosie_pi", "boards")
+        board_list = boards.split(", ")
+        return board_list
 
 def process_rosie_log(log):
     rosie_log = []
