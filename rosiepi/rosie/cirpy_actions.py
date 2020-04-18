@@ -93,8 +93,11 @@ def build_fw(board, build_ref, test_log):
         test_log.write("Checking out {}...".format(build_ref))
         git.checkout(build_ref)
 
+        test_log.write("Syncing submodules...")
+        git.submodule("sync")
+
         test_log.write("Updating submodules...")
-        git.submodule("update", "--init", "--recursive", "--depth", "1")
+        git.submodule("update", "--init", "--depth", "1")
     except sh.ErrorReturnCode as git_err:
         # TODO: change to 'master'
         git.checkout("-f", "rosiepi_test")
