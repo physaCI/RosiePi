@@ -35,9 +35,6 @@ _AVAILABLE_PORTS = ["atmel-samd", "nrf"]
 
 def cirpy_dir():
     return find_circuitpython()
-    # need new finder. pathlib.Path.home might be a good start, but need to
-    # verify user interaction with systemd services (RosiePiApp).
-
 
 def check_local_clone():
     """ Checks if there is a local clone of the circuitpython repository.
@@ -50,7 +47,6 @@ def check_local_clone():
         git.clone("https://github.com/adafruit/circuitpython.git",
                   "--depth", "1")
         os.chdir(working_dir)
-
 
 def build_fw(board, build_ref, test_log):
     """ Builds the firware at `build_ref` for `board`. Firmware will be
