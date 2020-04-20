@@ -22,6 +22,7 @@
  #
 
 import os
+import pathlib
 import pkg_resources
 import sh
 from sh.contrib import git
@@ -57,29 +58,24 @@ def build_fw(board, build_ref, test_log):
     :param: test_log: The TestController.log used for output.
     """
     working_dir = os.getcwd()
-    cirpy_ports_dir = os.path.join(cirpy_dir(), "ports")
+    cirpy_ports_dir = pathlib.Path(cirpy_dir(), "ports")
 
     board_port_dir = None
     for port in _AVAILABLE_PORTS:
-        port_dir = os.path.join(cirpy_ports_dir, port, "boards")
-        if board in os.listdir(port_dir):
-            board_port_dir = os.path.join(cirpy_ports_dir, port)
+        port_dir = cirpy_ports_dir / port / "boards" / board
+        if port_dir.exists():
+            board_port_dir = port_dir
             break
+
     if board_port_dir == None:
         err_msg = [
-            "'{}' board not available to test. Can't build firmware.".format(board),
+            f"'{board}' board not available to test. Can't build firmware.",
             #"="*60,
             #"Closing RosiePi"
         ]
         raise RuntimeError("\n".join(err_msg))
 
-    # TODO: might need to move this to a USB drive in the future to
-    # minimize writes to the RPi SD card.
-    build_dir = os.path.join(
-        pkg_resources.resource_filename("rosiepi", ".fw_builds"),
-        build_ref[:5],
-        board
-    )
+    build_dir = pathlib.Path.home() / ".fw_builds" / build_ref[:5] / board
 
     os.chdir(cirpy_dir())
     try:
