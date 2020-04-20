@@ -125,6 +125,7 @@ def build_fw(board, build_ref, test_log):
             stdout=subprocess.DEVNULL,
             stderr=subprocess.STDOUT,
             env=run_envs,
+            executable="/usr/bin/bash",
         )
 
         build_dir.mkdir(mode=0o0774, parents=True)
@@ -136,6 +137,7 @@ def build_fw(board, build_ref, test_log):
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             env=run_envs,
+            executable="/usr/bin/bash",
         )
 
         result = str(fw_build.stdout, encoding="utf-8").split("\n")
