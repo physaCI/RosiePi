@@ -115,11 +115,16 @@ def build_fw(board, build_ref, test_log):
         rosiepi_logger.info(
             f"Running make recipe: {'; '.join(board_cmd)}"
         )
+        run_envs = {
+            "PATH": os.environ.get("PATH", "")
+        }
+
         subprocess.run(
             board_cmd[0],
             shell=True,
             stdout=subprocess.DEVNULL,
-            stderr=subprocess.STDOUT
+            stderr=subprocess.STDOUT,
+            env=run_envs,
         )
 
         build_dir.mkdir(mode=0o0774, parents=True)
@@ -129,7 +134,8 @@ def build_fw(board, build_ref, test_log):
             check=True,
             shell=True,
             stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT
+            stderr=subprocess.STDOUT,
+            env=run_envs,
         )
 
         result = str(fw_build.stdout, encoding="utf-8").split("\n")
