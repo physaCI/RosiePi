@@ -119,25 +119,27 @@ def build_fw(board, build_ref, test_log):
             "PATH": os.environ.get("PATH", "")
         }
 
+        rosiepi_logger.info("Running build clean...")
         subprocess.run(
             board_cmd[0],
             shell=True,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.STDOUT,
-            env=run_envs,
             executable="/usr/bin/bash",
+            start_new_session=True,
         )
 
         build_dir.mkdir(mode=0o0774, parents=True)
 
+        rosiepi_logger.info("Running firmware build...")
         fw_build = subprocess.run(
             board_cmd[1],
             check=True,
             shell=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
-            env=run_envs,
             executable="/usr/bin/bash",
+            start_new_session=True,
         )
 
         result = str(fw_build.stdout, encoding="utf-8").split("\n")
