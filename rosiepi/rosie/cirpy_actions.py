@@ -65,7 +65,7 @@ def build_fw(board, build_ref, test_log):
     for port in _AVAILABLE_PORTS:
         port_dir = cirpy_ports_dir / port / "boards" / board
         if port_dir.exists():
-            board_port_dir = port_dir.resolve()
+            board_port_dir = (cirpy_ports_dir / port).resolve()
             rosiepi_logger.info(f"Board source found: {board_port_dir}")
             break
 
