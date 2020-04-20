@@ -122,7 +122,7 @@ def build_fw(board, build_ref, test_log):
             stderr=subprocess.STDOUT
         )
 
-        build_dir.mkdir(parents=True)
+        build_dir.mkdir(mode=0o0774, parents=True)
 
         fw_build = subprocess.run(
             board_cmd[1],
