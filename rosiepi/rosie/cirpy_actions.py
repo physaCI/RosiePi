@@ -31,6 +31,7 @@ import sys
 import time
 
 from rosiepi.rosie import find_circuitpython
+from ..logger import rosiepi_logger
 
 _AVAILABLE_PORTS = ["atmel-samd", "nrf"]
 
@@ -64,7 +65,8 @@ def build_fw(board, build_ref, test_log):
     for port in _AVAILABLE_PORTS:
         port_dir = cirpy_ports_dir / port / "boards" / board
         if port_dir.exists():
-            board_port_dir = port_dir
+            board_port_dir = port_dir.resolve()
+            rosiepi_logger.info(f"Board source found: {board_port_dir}")
             break
 
     if board_port_dir == None:
@@ -110,6 +112,9 @@ def build_fw(board, build_ref, test_log):
 
     test_log.write("Building firmware...")
     try:
+        rosiepi_logger.info(
+            f"Running make recipe: {'; '.join(board_cmd)}"
+        )
         subprocess.run(
             board_cmd[0],
             shell=True,
@@ -128,6 +133,7 @@ def build_fw(board, build_ref, test_log):
         result = str(fw_build.stdout, encoding="utf-8").split("\n")
         success_msg = [line for line in result if "bytes" in line]
         test_log.write(" - " + "\n - ".join(success_msg))
+        rosiepi_logger.info("Firmware built...")
 
     except subprocess.CalledProcessError as cmd_err:
         # TODO: change to 'master'
@@ -139,6 +145,7 @@ def build_fw(board, build_ref, test_log):
             #"="*60,
             #"Closing RosiePi"
         ]
+        rosiepi_logger.warning("Firmware build failed...")
         raise RuntimeError("\n".join(err_msg)) from None
 
 
