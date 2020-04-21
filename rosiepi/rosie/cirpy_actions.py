@@ -116,7 +116,7 @@ def build_fw(board, build_ref, test_log):
             f"Running make recipe: {'; '.join(board_cmd)}"
         )
         run_envs = {
-            "PATH": os.environ.get("PATH", "")
+            "BASH_ENV": "/etc/profile",
         }
 
         rosiepi_logger.info("Running build clean...")
@@ -127,6 +127,7 @@ def build_fw(board, build_ref, test_log):
             stderr=subprocess.STDOUT,
             executable="/usr/bin/bash",
             start_new_session=True,
+            env=run_envs,
         )
 
         build_dir.mkdir(mode=0o0774, parents=True)
@@ -140,6 +141,7 @@ def build_fw(board, build_ref, test_log):
             stderr=subprocess.STDOUT,
             executable="/usr/bin/bash",
             start_new_session=True,
+            env=run_envs,
         )
 
         result = str(fw_build.stdout, encoding="utf-8").split("\n")
