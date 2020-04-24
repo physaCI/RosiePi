@@ -37,7 +37,7 @@ from configparser import ConfigParser
 from socket import gethostname
 
 from .logger import rosiepi_logger
-from .rosie import find_circuitpython, test_controller
+from .rosie import test_controller
 
 cli_parser = argparse.ArgumentParser(description="RosieApp")
 cli_parser.add_argument(
