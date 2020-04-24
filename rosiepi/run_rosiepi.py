@@ -140,7 +140,7 @@ def markdownify_results(results):
     """
 
     mdown = [
-        "| Board | Result | Tests Passed | Tests Failed",
+        "| Board | Result | Tests Passed | Tests Failed |",
         "| :---: | :---: | :---: | :---: |"
     ]
 
