@@ -112,7 +112,7 @@ class TestResultPayload():
     def payload_json(self):
         payload_dict = {
             "github_data": dataclasses.asdict(self.github_data),
-            "node_test_data": self.node_test_data.board_tests
+            "node_test_data": dataclasses.asdict(self.node_test_data)
         }
 
         return json.dumps(payload_dict)
