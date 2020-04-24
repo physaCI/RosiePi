@@ -112,7 +112,7 @@ class TestResultPayload():
     def payload_json(self):
         payload_dict = {
             "github_data": dataclasses.asdict(self.github_data),
-            "node_test_data": self.node_test_data
+            "node_test_data": self.node_test_data.board_tests
         }
 
         return json.dumps(payload_dict)
@@ -150,6 +150,8 @@ def run_rosie(commit, boards, payload):
         :param: commit: The commit of circuitpython to pass to rosiepi.
         :param: boards: The boards connected to the RosiePi node to run tests
                         on. Supplied by the node's config file.
+        :param: payload: The ``TestResultPayload`` container to hold
+                         incremental result data.
     """
 
     summary_params = {
