@@ -250,7 +250,11 @@ def send_results(check_run_id, physaci_config, results_payload):
 
     response = requests.post(physaci_url, headers=header, json=payload)
     if not response.ok:
-        rosiepi_logger.warning("Failed to send results to physaCI")
+        rosiepi_logger.warning(
+            "Failed to send results to physaCI.\n"
+            f"Response code: {response.status_code}\n"
+            f"Response: {response.text}"
+        )
         raise RuntimeError(
             f"RosiePi failed to send results. Results payload: {results_payload}"
         )
