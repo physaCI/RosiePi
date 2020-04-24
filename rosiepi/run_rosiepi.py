@@ -28,6 +28,7 @@ with open(activate_this) as file_:
     exec(file_.read(), dict(__file__=activate_this))
 
 import argparse
+import dataclasses
 import datetime
 import json
 import requests
@@ -85,6 +86,37 @@ class PhysaCIConfig():
         board_list = boards.split(", ")
         return board_list
 
+@dataclasses.dataclass
+class GitHubData():
+    """ Dataclass to contain data formatted to update the GitHub check run
+    """
+    conclusion: str = ""
+    completed_at: str = ""
+    output: dict = dataclasses.field(default_factory=dict)
+
+@dataclasses.dataclass
+class NodeTestData():
+    """ Dataclass to contain test data stored by physaCI
+    """
+    board_tests: list = dataclasses.field(default_factory=list)
+
+class TestResultPayload():
+    """ Container to hold the test result payload.
+    """
+
+    def __init__(self):
+        self.github_data = GitHubData()
+        self.node_test_data = NodeTestData()
+
+    @property
+    def payload_json(self):
+        payload_dict = {
+            "github_data": dataclasses.asdict(self.github_data),
+            "node_test_data": self.node_test_data
+        }
+
+        return json.dumps(payload_dict)
+
 def process_rosie_log(log):
     rosie_log = []
     subsection = []
@@ -126,7 +158,7 @@ def markdownify_results(results):
     return "\n".join(mdown)
 
 
-def run_rosie(commit, boards):
+def run_rosie(commit, boards, payload):
     """ Runs rosiepi for each board.
         Returns results as a JSON for sending to GitHub.
 
@@ -134,9 +166,6 @@ def run_rosie(commit, boards):
         :param: boards: The boards connected to the RosiePi node to run tests
                         on. Supplied by the node's config file.
     """
-
-    app_conclusion = ""
-    app_completed_at = None
 
     summary_params = {
         "commit_title": commit[:5],
@@ -153,11 +182,13 @@ def run_rosie(commit, boards):
         f"{gethostname()}",
     ]
 
-    app_output = {
-        "title": "RosiePi",
-        "summary": "".join(app_output_summary),
-        "text": "",
-    }
+    payload.github_data.output.update(
+        {
+            "title": "RosiePi",
+            "summary": "".join(app_output_summary),
+            "text": "",
+        }
+    )
 
     board_tests = []
 
@@ -171,54 +202,48 @@ def run_rosie(commit, boards):
             "tests_failed": 0,
             "rosie_log": "",
         }
-        rosie_test = test_controller.TestController(board, commit)
 
-        # check if connection to board was successful
-        if rosie_test.state != "error":
-            rosie_test.start_test()
-        else:
-            board_results["outcome"] = "Error"
-            #print(rosie_test.log.getvalue())
-            app_conclusion = "failure"
-
-        # now check the result of each board test
-        if rosie_test.result: # everything passed!
-            board_results["outcome"] = "Passed"
-            if app_conclusion != "failure":
-                app_conclusion = "success"
-        else:
+        try:
+            rosie_test = test_controller.TestController(board, commit)
+        finally:
+            # check if connection to board was successful
             if rosie_test.state != "error":
-                board_results["outcome"] = "Failed"
+                rosie_test.start_test()
             else:
                 board_results["outcome"] = "Error"
-            app_conclusion = "failure"
+                #print(rosie_test.log.getvalue())
+                app_conclusion = "failure"
+
+            # now check the result of each board test
+            if rosie_test.result: # everything passed!
+                board_results["outcome"] = "Passed"
+                if app_conclusion != "failure":
+                    app_conclusion = "success"
+            else:
+                if rosie_test.state != "error":
+                    board_results["outcome"] = "Failed"
+                else:
+                    board_results["outcome"] = "Error"
+                app_conclusion = "failure"
 
         board_results["tests_passed"] = str(rosie_test.tests_passed)
         board_results["tests_failed"] = str(rosie_test.tests_failed)
         board_results["rosie_log"] = rosie_test.log.getvalue()
-        board_tests.append(board_results)
+        payload.node_test_data.board_tests.append(board_results)
 
-    app_output["text"] = markdownify_results(board_tests)
+    payload.github_data.conclusion = app_conclusion
 
-    app_completed_at = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+    payload.github_data.completed_at = (
+        datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+    )
 
-    payload = {
-        "github_data": {
-            "conclusion": app_conclusion,
-            "completed_at": app_completed_at,
-            "output": app_output,
-        },
-        "node_test_data": {
-            "board_tests": board_tests
+    payload.github_data.output.update(
+        {
+            "text": markdownify_results(payload.node_test_data.board_tests)
         }
-    }
-    #print("payload:", payload)
-    json_payload = json.dumps(payload)
-    print(json_payload)
+    )
 
     rosiepi_logger.info("Tests completed...")
-
-    return json_payload
 
 def send_results(check_run_id, physaci_config, results_payload):
     """ Send the results to physaCI.
@@ -254,6 +279,8 @@ def main():
 
     config = PhysaCIConfig()
 
-    rosie_results = run_rosie(cli_arg.commit, config.supported_boards)
+    payload = TestResultPayload()
 
-    send_results(cli_arg.check_run_id, config, rosie_results)
+    run_rosie(cli_arg.commit, config.supported_boards, payload)
+
+    send_results(cli_arg.check_run_id, config, payload.payload_json)
