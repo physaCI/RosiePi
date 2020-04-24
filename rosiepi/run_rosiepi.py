@@ -117,21 +117,6 @@ class TestResultPayload():
 
         return json.dumps(payload_dict)
 
-def process_rosie_log(log):
-    rosie_log = []
-    subsection = []
-    for line in log.split("\n"):
-        if line.count("=") < 25:
-            if line.count("-") < 60:
-                subsection.append(line)
-            else:
-                continue
-        else:
-            rosie_log.append(subsection)
-            subsection = []
-
-    return rosie_log
-
 def markdownify_results(results):
     """ Puts test results into a Markdown table for use with
         the GitHub Check Run API for the output text.
