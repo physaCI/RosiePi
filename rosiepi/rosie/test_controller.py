@@ -201,7 +201,10 @@ class TestController():
         self.log = TestResultStream(initial_value="\n".join(init_msg))
 
         try:
-            self.board = pyboard.CPboard.from_try_all(board)
+            kwargs = {
+                'wait': 20,
+            }
+            self.board = pyboard.CPboard.from_try_all(board, **kwargs)
             init_msg = [
                 "Connected!",
                 "Board info:",
