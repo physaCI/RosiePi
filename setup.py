@@ -15,12 +15,14 @@ setup(
         "Source Code": "https://github.com/sommersoft/RosiePi",
     },
 
+    python_requires=">=3.7",
+
     # could also include long_description, download_url, classifiers, etc.
 
     #scripts=['rosie_scripts/test_control_unit.py'],
 
     install_requires=[
-        "pyserial",
+        "pyserial==3.4",
         "sh",
         "pyusb",
         "requests",
