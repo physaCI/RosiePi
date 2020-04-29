@@ -206,4 +206,4 @@ def update_fw(board, fw_path, test_log):
             #"="*60,
             #"Closing RosiePi"
         ]
-        raise BaseException("\n".join(err_msg)) from None
+        raise RuntimeError("\n".join(err_msg)) from None
