@@ -32,6 +32,7 @@ import dataclasses
 import datetime
 import json
 import requests
+import traceback
 
 from configparser import ConfigParser
 from socket import gethostname
@@ -192,7 +193,7 @@ def run_rosie(commit, boards, payload):
 
         try:
             rosie_test = test_controller.TestController(board, commit)
-        finally:
+
             # check if connection to board was successful
             if rosie_test.state != "error":
                 rosie_test.start_test()
@@ -201,6 +202,11 @@ def run_rosie(commit, boards, payload):
                 #print(rosie_test.log.getvalue())
                 app_conclusion = "failure"
 
+        except Exception:
+            rosie_test.log.write(traceback.format_exc())
+            break
+
+        finally:
             # now check the result of each board test
             if rosie_test.result: # everything passed!
                 board_results["outcome"] = "Passed"
@@ -213,10 +219,10 @@ def run_rosie(commit, boards, payload):
                     board_results["outcome"] = "Error"
                 app_conclusion = "failure"
 
-        board_results["tests_passed"] = str(rosie_test.tests_passed)
-        board_results["tests_failed"] = str(rosie_test.tests_failed)
-        board_results["rosie_log"] = rosie_test.log.getvalue()
-        payload.node_test_data.board_tests.append(board_results)
+            board_results["tests_passed"] = str(rosie_test.tests_passed)
+            board_results["tests_failed"] = str(rosie_test.tests_failed)
+            board_results["rosie_log"] = rosie_test.log.getvalue()
+            payload.node_test_data.board_tests.append(board_results)
 
     payload.github_data.conclusion = app_conclusion
 
