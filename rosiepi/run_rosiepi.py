@@ -162,6 +162,8 @@ def run_rosie(commit, boards, payload):
                          incremental result data.
     """
 
+    app_conclusion = ""
+
     summary_params = {
         "commit_title": commit[:5],
         "commit_url": "".join([GIT_URL_COMMIT, commit]),
