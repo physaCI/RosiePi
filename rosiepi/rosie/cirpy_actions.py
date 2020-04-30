@@ -24,21 +24,17 @@
 import logging
 import os
 import pathlib
-import pkg_resources
-import sh
-from sh.contrib import git
 import subprocess
-import sys
 import time
 
-from rosiepi.rosie import find_circuitpython
+import sh
+from sh.contrib import git
 
-rosiepi_logger = logging.getLogger(__name__)
+from rosiepi.rosie import find_circuitpython as cirpy_dir
+
+rosiepi_logger = logging.getLogger(__name__) # pylint: disable=invalid-name
 
 _AVAILABLE_PORTS = ["atmel-samd", "nrf"]
-
-def cirpy_dir():
-    return find_circuitpython()
 
 def check_local_clone():
     """ Checks if there is a local clone of the circuitpython repository.
@@ -52,7 +48,7 @@ def check_local_clone():
                   "--depth", "1")
         os.chdir(working_dir)
 
-def build_fw(board, build_ref, test_log):
+def build_fw(board, build_ref, test_log): # pylint: disable=too-many-locals,too-many-statements
     """ Builds the firware at `build_ref` for `board`. Firmware will be
         output to `.fw_builds/<build_ref>/<board>/`.
 
@@ -71,7 +67,7 @@ def build_fw(board, build_ref, test_log):
             rosiepi_logger.info("Board source found: %s", board_port_dir)
             break
 
-    if board_port_dir == None:
+    if board_port_dir is None:
         err_msg = [
             f"'{board}' board not available to test. Can't build firmware.",
             #"="*60,
@@ -120,6 +116,7 @@ def build_fw(board, build_ref, test_log):
         }
 
         rosiepi_logger.info("Running build clean...")
+        # pylint: disable=subprocess-run-check
         subprocess.run(
             board_cmd[0],
             shell=True,
@@ -132,6 +129,7 @@ def build_fw(board, build_ref, test_log):
 
         build_dir.mkdir(mode=0o0774, parents=True)
 
+        # pylint: enable=subprocess-run-check
         rosiepi_logger.info("Running firmware build...")
         fw_build = subprocess.run(
             board_cmd[1],
@@ -162,10 +160,10 @@ def build_fw(board, build_ref, test_log):
         rosiepi_logger.warning("Firmware build failed...")
         raise RuntimeError("\n".join(err_msg)) from None
 
-
-    # TODO: change to 'master'
-    git.checkout("-f", "rosiepi_test")
-    os.chdir(working_dir)
+    finally:
+        # TODO: change to 'master'
+        git.checkout("-f", "rosiepi_test")
+        os.chdir(working_dir)
 
     return build_dir
 
