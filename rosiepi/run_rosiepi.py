@@ -23,26 +23,26 @@
 
 import pathlib
 
-activate_this = f'{pathlib.Path().home()}/rosie_pi/rosie_venv/bin/activate_this.py'
-try:
-    with open(activate_this) as file_:
-        exec(file_.read(), dict(__file__=activate_this))
-except:
-    pass
+ACTIVATE_THIS = f'{pathlib.Path().home()}/rosie_pi/rosie_venv/bin/activate_this.py'
+with open(ACTIVATE_THIS) as file_:
+    exec(file_.read(), dict(__file__=ACTIVATE_THIS)) # pylint: disable=exec-used
 
+# pylint: disable=wrong-import-position
 import argparse
 import dataclasses
 import datetime
 import logging
 import json
-import requests
 import traceback
 
 from configparser import ConfigParser
 from socket import gethostname
 
+import requests
+
 from .rosie import test_controller
 
+# pylint: disable=invalid-name
 rosiepi_logger = logging.getLogger(__name__)
 
 cli_parser = argparse.ArgumentParser(description="RosieApp")
@@ -62,8 +62,7 @@ GIT_URL_COMMIT = "https://github.com/sommersoft/circuitpython/commit/"
 _STATIC_CONFIG_FILE = pathlib.Path("/etc/opt/physaci_sub/conf.ini")
 
 class PhysaCIConfig():
-    """ Container class for holding local configuration results.
-    """
+    """ Container class for holding local configuration results. """
 
     def __init__(self):
         self.config = ConfigParser(allow_no_value=True, default_section="local")
@@ -75,40 +74,42 @@ class PhysaCIConfig():
                                                fallback=_STATIC_CONFIG_FILE)
         if self.config_location != _STATIC_CONFIG_FILE.resolve():
             alt_conf_file = pathlib.Path(self.config_location)
-            read_config = self.config.read([_STATIC_CONFIG_FILE, alt_conf_file],
-                                           default_section="local")
+            read_config = self.config.read([_STATIC_CONFIG_FILE, alt_conf_file])
 
     @property
     def physaci_url(self):
+        """ URL to send physaCI requests. """
         return self.config.get("local", "physaci_url")
 
     @property
     def physaci_api_key(self):
+        """ API key to send with physaCI requests. """
         return self.config.get("physaci", "api_access_key")
 
     @property
     def supported_boards(self):
+        """ The boards connected to this RosiePi node. """
         boards = self.config.get("rosie_pi", "boards")
         board_list = boards.split(", ")
         return board_list
 
 @dataclasses.dataclass
 class GitHubData():
-    """ Dataclass to contain data formatted to update the GitHub check run
+    """ Dataclass to contain data formatted to update the GitHub
+        check run.
     """
     conclusion: str = ""
     completed_at: str = ""
     output: dict = dataclasses.field(default_factory=dict)
 
+# pylint: disable=too-few-public-methods
 @dataclasses.dataclass
 class NodeTestData():
-    """ Dataclass to contain test data stored by physaCI
-    """
+    """ Dataclass to contain test data stored by physaCI. """
     board_tests: list = dataclasses.field(default_factory=list)
 
 class TestResultPayload():
-    """ Container to hold the test result payload.
-    """
+    """ Container to hold the test result payload """
 
     def __init__(self):
         self.github_data = GitHubData()
@@ -116,6 +117,7 @@ class TestResultPayload():
 
     @property
     def payload_json(self):
+        """ Format the contents into a JSON string. """
         payload_dict = {
             "github_data": dataclasses.asdict(self.github_data),
             "node_test_data": dataclasses.asdict(self.node_test_data)
@@ -183,8 +185,6 @@ def run_rosie(commit, boards, payload):
         }
     )
 
-    board_tests = []
-
     rosiepi_logger.info("Starting tests...")
 
     for board in boards:
@@ -207,7 +207,7 @@ def run_rosie(commit, boards, payload):
                 #print(rosie_test.log.getvalue())
                 app_conclusion = "failure"
 
-        except Exception:
+        except Exception: # pylint: disable=broad-except
             rosie_test.log.write(traceback.format_exc())
             break
 
@@ -275,6 +275,7 @@ def send_results(check_run_id, physaci_config, results_payload):
     rosiepi_logger.info("Test results sent successfully.")
 
 def main():
+    """ Run RosiePi tests. """
     cli_arg = cli_parser.parse_args()
 
     rosiepi_logger.info("Initiating RosiePi test(s).")
