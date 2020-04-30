@@ -21,6 +21,7 @@
  # THE SOFTWARE.
  #
 
+import logging
 import os
 import pathlib
 import pkg_resources
@@ -31,7 +32,8 @@ import sys
 import time
 
 from rosiepi.rosie import find_circuitpython
-from ..logger import rosiepi_logger
+
+rosiepi_logger = logging.getLogger(__name__)
 
 _AVAILABLE_PORTS = ["atmel-samd", "nrf"]
 
@@ -66,7 +68,7 @@ def build_fw(board, build_ref, test_log):
         port_dir = cirpy_ports_dir / port / "boards" / board
         if port_dir.exists():
             board_port_dir = (cirpy_ports_dir / port).resolve()
-            rosiepi_logger.info(f"Board source found: {board_port_dir}")
+            rosiepi_logger.info("Board source found: %s", board_port_dir)
             break
 
     if board_port_dir == None:
@@ -112,9 +114,7 @@ def build_fw(board, build_ref, test_log):
 
     test_log.write("Building firmware...")
     try:
-        rosiepi_logger.info(
-            f"Running make recipe: {'; '.join(board_cmd)}"
-        )
+        rosiepi_logger.info("Running make recipe: %s", '; '.join(board_cmd))
         run_envs = {
             "BASH_ENV": "/etc/profile",
         }

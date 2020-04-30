@@ -24,12 +24,16 @@
 import pathlib
 
 activate_this = f'{pathlib.Path().home()}/rosie_pi/rosie_venv/bin/activate_this.py'
-with open(activate_this) as file_:
-    exec(file_.read(), dict(__file__=activate_this))
+try:
+    with open(activate_this) as file_:
+        exec(file_.read(), dict(__file__=activate_this))
+except:
+    pass
 
 import argparse
 import dataclasses
 import datetime
+import logging
 import json
 import requests
 import traceback
@@ -37,8 +41,9 @@ import traceback
 from configparser import ConfigParser
 from socket import gethostname
 
-from .logger import rosiepi_logger
 from .rosie import test_controller
+
+rosiepi_logger = logging.getLogger(__name__)
 
 cli_parser = argparse.ArgumentParser(description="RosieApp")
 cli_parser.add_argument(
@@ -258,8 +263,10 @@ def send_results(check_run_id, physaci_config, results_payload):
     if not response.ok:
         rosiepi_logger.warning(
             "Failed to send results to physaCI.\n"
-            f"Response code: {response.status_code}\n"
-            f"Response: {response.text}"
+            "Response code: %s\n"
+            "Response: %s",
+            response.status_code,
+            response.text
         )
         raise RuntimeError(
             f"RosiePi failed to send results. Results payload: {results_payload}"
@@ -271,8 +278,8 @@ def main():
     cli_arg = cli_parser.parse_args()
 
     rosiepi_logger.info("Initiating RosiePi test(s).")
-    rosiepi_logger.info(f"Testing commit: {cli_arg.commit}")
-    rosiepi_logger.info(f"Check run id: {cli_arg.check_run_id}")
+    rosiepi_logger.info("Testing commit: %s", cli_arg.commit)
+    rosiepi_logger.info("Check run id: %s", cli_arg.check_run_id)
 
     config = PhysaCIConfig()
 

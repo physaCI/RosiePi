@@ -21,9 +21,6 @@
 # THE SOFTWARE.
 #
 
-import logging
-import logging.config
-
 LOGGING_CONF = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -49,7 +46,3 @@ LOGGING_CONF = {
         },
     },
 }
-
-logging.config.dictConfig(LOGGING_CONF)
-
-rosiepi_logger = logging.getLogger("rosiepi")
