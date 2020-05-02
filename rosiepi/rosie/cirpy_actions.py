@@ -32,6 +32,8 @@ from sh.contrib import git
 
 from rosiepi.rosie import find_circuitpython as cirpy_dir
 
+from tests import pyboard
+
 rosiepi_logger = logging.getLogger(__name__) # pylint: disable=invalid-name
 
 _AVAILABLE_PORTS = ["atmel-samd", "nrf"]
@@ -167,11 +169,12 @@ def build_fw(board, build_ref, test_log): # pylint: disable=too-many-locals,too-
 
     return build_dir
 
-def update_fw(board, fw_path, test_log):
+def update_fw(board, board_name, fw_path, test_log):
     """ Resets `board` into bootloader mode, and copies over
         new firmware located at `fw_path`.
 
     :param: board: The cpboard.py::CPboard object to act upon
+    :param: board_name: The name of the board
     :param: fw_path: File path to the firmware UF2 to copy.
     :param: test_log: The TestController.log used for output.
     """
@@ -182,12 +185,16 @@ def update_fw(board, fw_path, test_log):
                 test_log.write("Resetting into bootloader mode...")
                 board.reset_to_bootloader(repl=True)
                 time.sleep(10)
+
+        boot_board = pyboard.CPboard.from_build_name_bootloader(board_name)
+        with boot_board:
             test_log.write(
-                f"In bootloader mode. Current bootloader: {board.firmware.info['header']}"
+                "In bootloader mode. Current bootloader: "
+                f"{boot_board.firmware.info['header']}"
             )
             test_log.write("Uploading firmware...")
 
-            board.firmware.upload(fw_path)
+            boot_board.firmware.upload(fw_path)
 
             test_log.write("Waiting for board to reload...")
             time.sleep(10)

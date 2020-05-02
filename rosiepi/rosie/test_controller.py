@@ -235,6 +235,7 @@ class TestController():
             self.log.write(f"Updating Firmware on: {self.board_name}")
             cirpy_actions.update_fw(
                 self.board,
+                self.board_name,
                 os.path.join(self.fw_build_dir, "firmware.uf2"),
                 self.log
             )
