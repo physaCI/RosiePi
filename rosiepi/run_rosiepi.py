@@ -243,7 +243,7 @@ def run_rosie(commit, check_run_id, boards, payload):
     )
 
     results_url = (
-        f"https://www.physaci.com/job?node{gethostname()}&job-id{check_run_id}"
+        f"https://www.physaci.com/job?node={gethostname()}&job-id={check_run_id}"
     )
 
     payload.github_data.output.update(
