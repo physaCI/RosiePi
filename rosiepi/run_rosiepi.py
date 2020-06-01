@@ -170,28 +170,6 @@ def run_rosie(commit, check_run_id, boards, payload):
 
     app_conclusion = ""
 
-    summary_params = {
-        "commit_title": commit[:5],
-        "commit_url": "".join([GIT_URL_COMMIT, commit]),
-    }
-
-    app_output_summary = [
-        "Ran tests on: ",
-        f"[{summary_params['commit_title']}]",
-        f"({summary_params['commit_url']})",
-        "\n\n",
-        "RosiePi job ran on node: ",
-        f"{gethostname()}",
-    ]
-
-    payload.github_data.output.update(
-        {
-            "title": "RosiePi",
-            "summary": "".join(app_output_summary),
-            "text": "",
-        }
-    )
-
     rosiepi_logger.info("Starting tests...")
 
     for board in boards:
@@ -236,11 +214,10 @@ def run_rosie(commit, check_run_id, boards, payload):
             board_results["rosie_log"] = rosie_test.log.getvalue()
             payload.node_test_data.board_tests.append(board_results)
 
-    payload.github_data.conclusion = app_conclusion
-
-    payload.github_data.completed_at = (
-        datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
-    )
+    app_output_summary = [
+        f"RosiePi Node: {gethostname()}",
+        f"Overall Outcome: {app_conclusion.title()}"
+    ]
 
     results_url = (
         f"https://www.physaci.com/job?node={gethostname()}&job-id={check_run_id}"
@@ -248,11 +225,19 @@ def run_rosie(commit, check_run_id, boards, payload):
 
     payload.github_data.output.update(
         {
+            "title": "RosiePi Test Results",
+            "summary": "\n\n".join(app_output_summary),
             "text": markdownify_results(
                 payload.node_test_data.board_tests,
                 results_url
-            )
+            ),
         }
+    )
+
+    payload.github_data.conclusion = app_conclusion
+
+    payload.github_data.completed_at = (
+        datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
     )
 
     rosiepi_logger.info("Tests completed...")
