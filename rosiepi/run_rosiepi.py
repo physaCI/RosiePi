@@ -90,7 +90,7 @@ class PhysaCIConfig():
     def supported_boards(self):
         """ The boards connected to this RosiePi node. """
         boards = self.config.get("rosie_pi", "boards")
-        board_list = boards.split(", ")
+        board_list = [board.strip() for board in boards.split(",")]
         return board_list
 
 @dataclasses.dataclass
