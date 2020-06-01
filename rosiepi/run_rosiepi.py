@@ -125,7 +125,7 @@ class TestResultPayload():
 
         return json.dumps(payload_dict)
 
-def markdownify_results(results):
+def markdownify_results(results, results_url):
     """ Puts test results into a Markdown table for use with
         the GitHub Check Run API for the output text.
 
@@ -144,18 +144,24 @@ def markdownify_results(results):
             board["outcome"],
             board["tests_passed"],
             board["tests_failed"],
-            ""
+            "",
         ]
         mdown.append("|".join(board_mdown))
+
+    mdown.extend([
+        "",
+        f"Full test log(s) available [here]({results_url})."
+    ])
 
     return "\n".join(mdown)
 
 
-def run_rosie(commit, boards, payload):
+def run_rosie(commit, check_run_id, boards, payload):
     """ Runs rosiepi for each board.
         Returns results as a JSON for sending to GitHub.
 
         :param: commit: The commit of circuitpython to pass to rosiepi.
+        :param: check_run_id: The ID of the GitHub Check Run
         :param: boards: The boards connected to the RosiePi node to run tests
                         on. Supplied by the node's config file.
         :param: payload: The ``TestResultPayload`` container to hold
@@ -167,7 +173,6 @@ def run_rosie(commit, boards, payload):
     summary_params = {
         "commit_title": commit[:5],
         "commit_url": "".join([GIT_URL_COMMIT, commit]),
-        "rosie_version": "0.1", #rosiepi_version,
     }
 
     app_output_summary = [
@@ -237,9 +242,16 @@ def run_rosie(commit, boards, payload):
         datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
     )
 
+    results_url = (
+        f"https://www.physaci.com/job?node{gethostname()}&job-id{check_run_id}"
+    )
+
     payload.github_data.output.update(
         {
-            "text": markdownify_results(payload.node_test_data.board_tests)
+            "text": markdownify_results(
+                payload.node_test_data.board_tests,
+                results_url
+            )
         }
     )
 
@@ -280,14 +292,17 @@ def main():
     """ Run RosiePi tests. """
     cli_arg = cli_parser.parse_args()
 
+    commit = cli_arg.commit
+    check_run_id = cli_arg.check_run_id
+
     rosiepi_logger.info("Initiating RosiePi test(s).")
-    rosiepi_logger.info("Testing commit: %s", cli_arg.commit)
-    rosiepi_logger.info("Check run id: %s", cli_arg.check_run_id)
+    rosiepi_logger.info("Testing commit: %s", commit)
+    rosiepi_logger.info("Check run id: %s", check_run_id)
 
     config = PhysaCIConfig()
 
     payload = TestResultPayload()
 
-    run_rosie(cli_arg.commit, config.supported_boards, payload)
+    run_rosie(commit, check_run_id, config.supported_boards, payload)
 
-    send_results(cli_arg.check_run_id, config, payload.payload_json)
+    send_results(check_run_id, config, payload.payload_json)
