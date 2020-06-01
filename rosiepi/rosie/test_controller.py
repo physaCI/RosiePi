@@ -198,7 +198,8 @@ class TestController():
             f"Connecting to: {board}",
             "-"*60
         ]
-        self.log = TestResultStream(initial_value="\n".join(init_msg))
+        self.log = TestResultStream()
+        self.log.write("\n".join(init_msg))
 
         try:
             kwargs = {
