@@ -23,9 +23,10 @@ setup(
 
     install_requires=[
         "pyserial==3.4",
-        "sh",
+        "pytest==5.4",
         "pyusb",
         "requests",
+        "sh",
     ],
 
     #package_dir={"rosiepi":"rosie"},
