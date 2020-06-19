@@ -23,7 +23,7 @@ setup(
 
     install_requires=[
         "pyserial==3.4",
-        "pytest==5.4",
+        "pytest<5.5",
         "pyusb",
         "requests",
         "sh",
