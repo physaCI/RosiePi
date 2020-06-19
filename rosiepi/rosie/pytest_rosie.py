@@ -42,7 +42,7 @@ class RosieTestController():
         )
         self._controller.log.write(info_msg)
 
-    def pytest_sessionfinish(self, session):
+    def pytest_sessionfinish(self, session, exitstatus):
         """ pytest fixture to update the final pass/fail numbers to the
             RosiePi test controller instance.
         """
@@ -50,6 +50,7 @@ class RosieTestController():
             session.testscollected - session.testsfailed
         )
         self._controller.tests_failed = session.testsfailed
+        self._controller._result = exitstatus
 
     def pytest_collectreport(self, report):
         """ pytest fixture to update the number of tests collected to

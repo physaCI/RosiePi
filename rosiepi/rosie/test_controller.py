@@ -94,6 +94,8 @@ class TestController():
         self.tests_collected = 0
         self.tests_passed = 0
         self.tests_failed = 0
+        self._result = pytest.ExitCode.NO_TESTS_COLLECTED
+
         init_msg = [
             #"-"*60,
             "Initiating rosiepi...",
@@ -142,6 +144,12 @@ class TestController():
                 board.reset()
         except Exception as err: # pylint: disable=broad-except
             rosiepi_logger.info("Board reset failed: %s", err)
+
+    @property
+    def result(self):
+        """ The ``pytest.ExitCode`` result of the test instance.
+        """
+        return self._result
 
     def start_test(self):
         self.state = "starting_fw_prep"
