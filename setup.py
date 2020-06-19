@@ -1,18 +1,18 @@
 from setuptools import setup, find_packages
 setup(
     name="rosiepi",
-    version="0.1",
+    version="0.2",
     # metadata to display on PyPI
     author="Michael Schroeder",
     author_email="sommersoft@github.com",
     description="CircuitPython Firmware Test Framework",
     license="MIT",
     keywords="circuitpython, rosiepi, rosie",
-    url="https://github.com/sommersoft/RosiePi",   # project home page, if any
+    url="https://github.com/physaCI/RosiePi",   # project home page, if any
     project_urls={
-        "Issues": "https://github.com/sommersoft/RosiePi/issues",
+        "Issues": "https://github.com/physaCI/RosiePi/issues",
         #"Documentation": "https://sommersoft/RosiePi/README.md",
-        "Source Code": "https://github.com/sommersoft/RosiePi",
+        "Source Code": "https://github.com/physaCI/RosiePi",
     },
 
     python_requires=">=3.7",
@@ -29,14 +29,7 @@ setup(
         "sh",
     ],
 
-    #package_dir={"rosiepi":"rosie"},
     packages=find_packages(),
-
-    package_data={
-        "": [
-            "verifiers/*"
-        ]
-    },
 
     entry_points={
         "console_scripts": [
