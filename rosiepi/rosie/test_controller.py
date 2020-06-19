@@ -25,6 +25,7 @@ import argparse
 import atexit
 import datetime
 from io import StringIO
+import logging
 import os
 import pathlib
 import tempfile
@@ -35,6 +36,8 @@ import pytest
 from . import cirpy_actions
 
 from .pytest_rosie import RosieTestController
+
+rosiepi_logger = logging.getLogger(__name__) # pylint: disable=invalid-name
 
 cli_parser = argparse.ArgumentParser(description="rosiepi Test Controller")
 cli_parser.add_argument(
