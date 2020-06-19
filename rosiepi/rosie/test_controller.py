@@ -25,12 +25,12 @@ import argparse
 import datetime
 from io import StringIO
 import os
+import pathlib
+import tempfile
+import sys
 
 import pytest
 
-from tests import pyboard
-
-from rosiepi.rosie import find_circuitpython
 from . import cirpy_actions
 
 from .pytest_rosie import RosieTestController
@@ -45,10 +45,6 @@ cli_parser.add_argument(
     default=None,
     help="Tag or commit to build CircuitPython from."
 )
-
-
-def cp_tests_dir():
-    return os.path.join(find_circuitpython(), "tests")
 
 class TestResultStream(StringIO):
     """ Container for handling test result output, sending to
@@ -82,6 +78,13 @@ class TestController():
         self.run_date = datetime.datetime.now().strftime("%d-%b-%Y,%H:%M:%S%Z")
         self.build_ref = build_ref
         self.board_name = board
+
+        tmp_prefix = str(f".rosiepi_{build_ref[:5]}_")
+        self.clone_tmp_dir = tempfile.TemporaryDirectory(prefix=tmp_prefix)
+        self.clone_dir_path = pathlib.Path(self.clone_tmp_dir.name)
+        sys.path.append(str(self.clone_dir_path.resolve()))
+        rosiepi_logger.info("tmp dir: %s", self.clone_dir_path)
+
         self.tests_collected = 0
         self.tests_passed = 0
         self.tests_failed = 0
@@ -92,11 +95,18 @@ class TestController():
             f" - Test commit: {build_ref}",
             f" - Test board: {board}",
             f" - Connecting to: {board}...",
+            f" - Fetching commit..."
         ]
         self.log = TestResultStream()
         self.log.write("\n".join(init_msg))
 
+        cirpy_actions.clone_commit(
+            str(self.clone_dir_path.resolve()),
+            build_ref
+        )
+
         try:
+            from tests import pyboard # pylint: disable=import-outside-toplevel
             kwargs = {
                 'wait': 20,
             }
@@ -107,7 +117,8 @@ class TestController():
             ]
             self.log.write("\n".join(init_msg))
             self.state = "board_connected"
-        except RuntimeError as conn_err:
+
+        except (RuntimeError, ImportError) as conn_err:
             err_msg = [
                 f"Failed to connect to: {self.board_name}",
                 conn_err.args[0],
@@ -125,28 +136,29 @@ class TestController():
         #self.log.write("-"*60)
 
         try:
-            self.fw_build_dir = cirpy_actions.build_fw(self.board_name, self.build_ref, self.log)
-            self.log.write("="*60)
+            fw_build_dir = cirpy_actions.build_fw(
+                self.board_name,
+                self.log,
+                self.clone_dir_path.resolve()
+            )
 
             self.log.write(f"Updating Firmware on: {self.board_name}")
             cirpy_actions.update_fw(
                 self.board,
                 self.board_name,
-                os.path.join(self.fw_build_dir, "firmware.uf2"),
+                os.path.join(fw_build_dir, "firmware.uf2"),
                 self.log
             )
-            self.log.write("="*60)
+
         except RuntimeError as fw_err:
             err_msg = [
                 f"Failed update firmware on: {self.board_name}",
                 fw_err.args[0],
-                "="*60,
+                "-"*60,
                 "Closing RosiePi"
             ]
             self.log.write("\n".join(err_msg), quiet=True)
             self.state = "error"
-            #raise RuntimeError("\n".join(err_msg)) from None
-        #print(self.board.firmware.info)
 
         self.log.write("-"*60)
 
