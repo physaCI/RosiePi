@@ -65,22 +65,34 @@ class RosieTestController():
             the RosiePi log stream.
         """
         self._controller.log.write(
-            f"Collected {self._controller.tests_collected} tests"
+            f"Collected {self._controller.tests_collected} tests\n\n"
         )
+
+    #def pytest_report_collectionfinish(self, startdir):
+    #    """ pytest fixutre to inject the root directory into the RosiePi log.
+    #    """
+    #    self._controller.log.write(f"root dir: {startdir}")
 
     def pytest_runtest_logreport(self, report):
         """ pytest fixture to inject each test's location, outcome, and
             duration into the RosiePi log stream.
         """
         if report.when == "call":
-            self._controller.log.write(
+            call_line = (
                 f"{report.outcome.upper():<8} "
                 f"{report.nodeid} "
                 f"({report.duration:.2f} secs)"
             )
+
             if report.outcome == "failed":
-                trace_lines = f"{report.longrepr.reprtraceback}\n\n"
-                self._controller.log.write(trace_lines)
+                trace_lines = str(report.longrepr.reprtraceback)
+                trace_lines = [f"--> {line}" for line in trace_lines.split("\n")]
+                call_line = "\n{call}\n{trace}\n\n".format(
+                    call=call_line,
+                    trace="\n".join(trace_lines)
+                )
+
+            self._controller.log.write(call_line)
 
     @pytest.fixture()
     def board_name(self):
