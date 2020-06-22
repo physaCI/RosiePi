@@ -63,12 +63,13 @@ def clone_commit(cirpy_dir, commit):
         git.submodule("update", "--init")
 
     except sh.ErrorReturnCode as git_err:
+        git_stderr = str(git_err.stderr, encoding="utf-8").strip("\n")
         err_msg = [
             f"Failed to retrive repository at {commit}:",
-            " - {}".format(str(git_err.stderr, encoding="utf-8").strip("\n")),
+            f" - {git_stderr}",
         ]
         rosiepi_logger.warning("%s", "\n".join(err_msg))
-        raise RuntimeError("\n".join(err_msg)) from None
+        raise RuntimeError(git_stderr) from None
 
     finally:
         os.chdir(working_dir)
@@ -107,7 +108,7 @@ def build_fw(board, test_log, cirpy_dir): # pylint: disable=too-many-locals,too-
 
     test_log.write("Building firmware...")
     try:
-        rosiepi_logger.info("Running make recipe: %s", '; '.join(board_cmd))
+        rosiepi_logger.info("Running make recipe: %s", board_cmd)
         run_envs = {
             "BASH_ENV": "/etc/profile",
             "LANG": "en_US.UTF-8",
