@@ -108,39 +108,54 @@ class TestController():
             "Initiating rosiepi...",
             f" - Date/Time: {self.run_date}",
             f" - Test commit: {build_ref}",
-            f" - Test board: {board}",
-            f" - Fetching commit..."
+            f" - Target board: {board}",
+            " - Fetching commit..."
         ]
         self.log = TestResultStream()
         self.log.write("\n".join(init_msg))
 
-        cirpy_actions.clone_commit(
-            str(self.clone_dir_path.resolve()),
-            build_ref
-        )
+        try:
+            cirpy_actions.clone_commit(
+                str(self.clone_dir_path.resolve()),
+                build_ref
+            )
+        except RuntimeError as clone_err:
+            err_msg = [
+                #f"  - Failed fetch commit: {self.build_ref}",
+                f"   - {clone_err.args[0]}",
+                "-"*60,
+                "Closing RosiePi"
+            ]
+            self.log.write("\n".join(err_msg))
+            self.state = "error"
+            return
 
         try:
             from tests import pyboard # pylint: disable=import-outside-toplevel
+            self.log.write(
+                " - Connecting to target board..."
+            )
             kwargs = {
                 'wait': 20,
             }
             self.board = pyboard.CPboard.from_try_all(board, **kwargs)
-            init_msg = [
+            board_connect_msg = [
                 f"   - Serial Number: {self.board.serial_number}",
                 f"   - Disk Drive: {self.board.disk.path}",
             ]
-            self.log.write("\n".join(init_msg))
+            self.log.write("\n".join(board_connect_msg))
             self.state = "board_connected"
+            self.log.write("-"*60)
 
         except (RuntimeError, ImportError) as conn_err:
             err_msg = [
                 f"Failed to connect to: {self.board_name}",
                 conn_err.args[0],
+                "-"*60,
                 "Closing RosiePi"
             ]
             self.log.write("\n".join(err_msg))
             self.state = "error"
-        self.log.write("-"*60)
 
     def __cleanup(self):
         """ Cleanup function to ensure temp directory is destroyed.
