@@ -40,6 +40,8 @@ from socket import gethostname
 
 import requests
 
+from pytest import ExitCode
+
 from .rosie import test_controller
 
 # pylint: disable=invalid-name
@@ -198,7 +200,7 @@ def run_rosie(commit, check_run_id, boards, payload):
 
         finally:
             # now check the result of each board test
-            if rosie_test.result: # everything passed!
+            if rosie_test.result == ExitCode.OK: # everything passed!
                 board_results["outcome"] = "Passed"
                 if app_conclusion != "failure":
                     app_conclusion = "success"
