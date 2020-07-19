@@ -30,8 +30,6 @@ import time
 import sh
 from sh.contrib import git
 
-#from rosiepi.rosie import find_circuitpython as cirpy_dir
-
 rosiepi_logger = logging.getLogger(__name__) # pylint: disable=invalid-name
 
 _AVAILABLE_PORTS = ["atmel-samd", "nrf"]
@@ -101,7 +99,6 @@ def build_fw(board, test_log, cirpy_dir): # pylint: disable=too-many-locals,too-
 
     build_dir = pathlib.Path(board_port_dir, ".fw_build", board)
 
-    #os.chdir(board_port_dir)
     board_cmd = (
         f"make -C {board_port_dir.resolve()} BOARD={board} BUILD={build_dir} V=2"
     )
@@ -114,9 +111,6 @@ def build_fw(board, test_log, cirpy_dir): # pylint: disable=too-many-locals,too-
             "LANG": "en_US.UTF-8",
             "LC_ALL": "en_US.UTF-8"
         }
-
-        #build_dir.mkdir(mode=0o0774, parents=True)
-        #build_dir.mkdir(parents=True)
 
         rosiepi_logger.info("Running firmware build...")
         fw_build = subprocess.run(
@@ -159,7 +153,6 @@ def update_fw(board, board_name, fw_path, test_log):
     :param: fw_path: File path to the firmware UF2 to copy.
     :param: test_log: The TestController.log used for output.
     """
-    success_msg = ["Firmware upload successful!"]
     try:
         from tests import pyboard # pylint: disable=import-outside-toplevel
 
@@ -183,8 +176,7 @@ def update_fw(board, board_name, fw_path, test_log):
 
         with board:
             pass
-            #success_msg.append(" - New firmware: {}".format(board.firmware.info))
-        test_log.write("\n".join(success_msg))
+        test_log.write("Firmware upload successful!")
 
     except BaseException as brd_err:
         err_msg = [
